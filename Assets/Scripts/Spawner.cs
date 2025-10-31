@@ -7,7 +7,8 @@ public class Spawner : MonoBehaviour
     [SerializeField] private NumberPiece numberPiecePrefab;
 
     [Header("Spawn Settings")]
-    [SerializeField] private float topY = 4.5f;
+    [Tooltip("Margin below camera top to place the aiming line")]
+    [SerializeField] private float topMargin = 0.8f;
     [SerializeField] private float horizontalMargin = 0.6f;
     [SerializeField] private float holdFollowSpeed = 20f;
 
@@ -19,30 +20,41 @@ public class Spawner : MonoBehaviour
     private NumberPiece heldPiece;
     private int nextValue;
     private float minX, maxX;
+    private float lastPointerX; // fallback when no valid input
+    private float topY;
 
     private void Start()
     {
         cam = Camera.main;
         ComputeHorizontalBounds();
+        UpdateTopY();
         nextValue = GetRandomStartValue();
         UpdatePreview(nextValue);
         SpawnHeldPiece();
+    }
+
+    private void UpdateTopY()
+    {
+        // Camera top in world space minus a margin
+        float camTop = cam.transform.position.y + cam.orthographicSize;
+        topY = camTop - topMargin;
     }
 
     private void ComputeHorizontalBounds()
     {
         float halfH = cam.orthographicSize;
         float halfW = halfH * cam.aspect;
-        minX = -halfW + horizontalMargin;
-        maxX = +halfW - horizontalMargin;
+        minX = cam.transform.position.x - halfW + horizontalMargin;
+        maxX = cam.transform.position.x + halfW - horizontalMargin;
     }
 
     private void Update()
     {
         if (GameManager.I != null && GameManager.I.IsGameOver()) return;
 
-        // Recompute bounds if aspect changes (rare at runtime)
-        // ComputeHorizontalBounds();
+        // If aspect/device simulator changes, keep things up to date
+        UpdateTopY();
+        ComputeHorizontalBounds();
 
         float targetX = GetPointerWorldX();
         targetX = Mathf.Clamp(targetX, minX, maxX);
@@ -70,12 +82,30 @@ public class Spawner : MonoBehaviour
 
     private float GetPointerWorldX()
     {
+        // Get current pointer position (mouse or first touch)
         Vector3 p = Input.mousePosition;
         if (Input.touchCount > 0)
         {
             p = Input.GetTouch(0).position;
         }
+
+        // Protect against Simulator/Editor cases yielding NaN or unset z
+        if (float.IsNaN(p.x) || float.IsInfinity(p.x))
+        {
+            return lastPointerX == 0f ? (minX + maxX) * 0.5f : lastPointerX;
+        }
+
+        // For orthographic camera, z is still required by API; supply distance to the spawning plane
+        float planeZ = Mathf.Abs(cam.transform.position.z - transform.position.z);
+        p.z = planeZ <= 0f ? Mathf.Abs(cam.transform.position.z) : planeZ;
+
         Vector3 world = cam.ScreenToWorldPoint(p);
+        if (float.IsNaN(world.x) || float.IsInfinity(world.x))
+        {
+            return lastPointerX == 0f ? (minX + maxX) * 0.5f : lastPointerX;
+        }
+
+        lastPointerX = world.x;
         return world.x;
     }
 

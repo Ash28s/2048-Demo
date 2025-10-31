@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class DeathZone : MonoBehaviour
@@ -5,22 +6,39 @@ public class DeathZone : MonoBehaviour
     [SerializeField] private float settleSpeedThreshold = 0.25f;
     [SerializeField] private float requiredSettleTime = 0.6f;
 
+    private readonly Dictionary<Rigidbody2D, float> dwell = new();
+
     private void OnTriggerStay2D(Collider2D other)
     {
         if (GameManager.I != null && GameManager.I.IsGameOver()) return;
 
-        var piece = other.GetComponent<NumberPiece>();
-        if (piece == null) return;
-
         var rb = other.attachedRigidbody;
         if (rb == null) return;
 
+        if (!dwell.ContainsKey(rb))
+            dwell[rb] = 0f;
+
         if (rb.velocity.magnitude < settleSpeedThreshold)
         {
-            // Once it stays slow for a short time in the top zone, end the game
-            // To keep it simple, we rely on Time.timeSinceLevelLoad via a coroutine-less latch.
-            // A stricter implementation would track per-piece dwell time; here we just quick-end.
-            GameManager.I?.GameOver();
+            dwell[rb] += Time.deltaTime;
+            if (dwell[rb] >= requiredSettleTime)
+            {
+                GameManager.I?.GameOver();
+            }
+        }
+        else
+        {
+            // Reset if it’s still moving fast
+            dwell[rb] = 0f;
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        var rb = other.attachedRigidbody;
+        if (rb != null && dwell.ContainsKey(rb))
+        {
+            dwell.Remove(rb);
         }
     }
 }
