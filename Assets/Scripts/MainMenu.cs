@@ -35,7 +35,8 @@ public class MainMenu : MonoBehaviour
      public void StartGame()
     {
         clickSound.Play();
-        SceneManager.LoadScene("Level_1"); // Replace with your game scene name
+        UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex+1);
+  
     }
 
     // Open settings panel

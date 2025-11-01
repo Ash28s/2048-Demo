@@ -10,10 +10,18 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TMP_Text highScoreText;
     [SerializeField] private TMP_Text nextText;
     [SerializeField] private GameObject gameOverPanel;
+    [SerializeField] private GameObject gameWonPanel;
+
+    [SerializeField] private int reqScore = 50;
+    [Header("Timer Settings")]
+    public float timeLimit = 60f; // Time limit in seconds
+    private float currentTime;
+    public TextMeshProUGUI timerText;
 
     private int score;
     private int highScore;
     private bool isGameOver;
+    private bool isWon;
 
     private void Awake()
     {
@@ -24,6 +32,7 @@ public class GameManager : MonoBehaviour
         }
         I = this;
         DontDestroyOnLoad(gameObject);
+        currentTime = timeLimit;
     }
 
     private void Start()
@@ -33,6 +42,35 @@ public class GameManager : MonoBehaviour
         UpdateHighScoreUI();
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
     }
+
+    private void Update()
+    {
+        if (!isGameOver && currentTime > 0 && isWon == false)
+        {
+            currentTime -= Time.deltaTime;
+            UpdateTimerDisplay();
+
+            if (currentTime <= 0)
+            {
+                GameOver();
+            }
+            if(score>=reqScore)
+            {
+                GameWon();
+            }
+        }
+    }
+    
+    private void UpdateTimerDisplay()
+    {
+        if (timerText != null)
+        {
+            int minutes = Mathf.FloorToInt(currentTime / 60);
+            int seconds = Mathf.FloorToInt(currentTime % 60);
+            timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+        }
+    }
+
 
     public void AddScore(int value)
     {
@@ -73,6 +111,15 @@ public class GameManager : MonoBehaviour
         if (isGameOver) return;
         isGameOver = true;
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
+        // Optionally stop time:
+        // Time.timeScale = 0f;
+    }
+
+    public void GameWon()
+    {
+        if (isWon) return;
+        isWon = true;
+        if (gameWonPanel != null) gameWonPanel.SetActive(true);
         // Optionally stop time:
         // Time.timeScale = 0f;
     }
