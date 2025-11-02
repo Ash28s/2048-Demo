@@ -1,166 +1,195 @@
 using UnityEngine;
 using TMPro;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class Spawner : MonoBehaviour
 {
     [Header("Prefab")]
     [SerializeField] private NumberPiece numberPiecePrefab;
 
-    [Header("Spawn Settings")]
-    [Tooltip("Margin below camera top to place the aiming line")]
-    [SerializeField] private float topMargin = 0.8f;
-    [SerializeField] private float horizontalMargin = 0.6f;
-    [SerializeField] private float holdFollowSpeed = 20f;
+    [Header("Spawn Points")]
+    [SerializeField] private List<Transform> spawnPoints = new List<Transform>();
 
-    [Header("Next Preview (Optional)")]
+    [Header("UI Controls")]
+    [SerializeField] private Button dropButton;
+
+    [Header("Settings")]
+    [SerializeField] private float pieceMoveSpeed = 15f;
+    [SerializeField] private float spawnDelay = 1.0f; // 1 second delay
+    [SerializeField] private float swipeThreshold = 50f;
+
+    [Header("Next Preview")]
     [SerializeField] private SpriteRenderer previewSprite;
     [SerializeField] private TMP_Text previewLabel;
 
     private Camera cam;
     private NumberPiece heldPiece;
+    private int currentSpawnIndex = 0;
     private int nextValue;
-    private float minX, maxX;
-    private float lastPointerX; // fallback when no valid input
-    private float topY;
+
+    // Swipe tracking
+    private Vector2 lastTouchPos;
+    private bool isTouching = false;
+    private bool isSpawning = false; // Prevent overlap
 
     private void Start()
     {
         cam = Camera.main;
-        ComputeHorizontalBounds();
-        UpdateTopY();
+
+        // === VALIDATION ===
+        if (spawnPoints.Count == 0)
+        {
+            Debug.LogError("Spawner: No spawn points assigned!");
+            return;
+        }
+        if (dropButton == null)
+        {
+            Debug.LogError("Spawner: Drop Button not assigned!");
+            return;
+        }
+
+        // === BUTTON SETUP ===
+        dropButton.onClick.RemoveAllListeners();
+        dropButton.onClick.AddListener(TryDropPiece);
+
+        // === INITIAL SPAWN ===
         nextValue = GetRandomStartValue();
         UpdatePreview(nextValue);
         SpawnHeldPiece();
-    }
-
-    private void UpdateTopY()
-    {
-        // Camera top in world space minus a margin
-        float camTop = cam.transform.position.y + cam.orthographicSize;
-        topY = camTop - topMargin;
-    }
-
-    private void ComputeHorizontalBounds()
-    {
-        float halfH = cam.orthographicSize;
-        float halfW = halfH * cam.aspect;
-        minX = cam.transform.position.x - halfW + horizontalMargin;
-        maxX = cam.transform.position.x + halfW - horizontalMargin;
     }
 
     private void Update()
     {
         if (GameManager.I != null && GameManager.I.IsGameOver()) return;
 
-        // If aspect/device simulator changes, keep things up to date
-        UpdateTopY();
-        ComputeHorizontalBounds();
-
-        float targetX = GetPointerWorldX();
-        targetX = Mathf.Clamp(targetX, minX, maxX);
-
-        Vector3 spawnerPos = transform.position;
-        spawnerPos.x = targetX;
-        spawnerPos.y = topY;
-        transform.position = spawnerPos;
+        HandleSwipeInput();
 
         if (heldPiece != null)
-        {
-            // Smooth follow to reduce jitter
-            Vector3 hp = heldPiece.transform.position;
-            hp.x = Mathf.Lerp(hp.x, targetX, Time.deltaTime * holdFollowSpeed);
-            hp.y = topY;
-            heldPiece.transform.position = hp;
+            MoveHeldPieceToCurrentPoint();
+    }
 
-            if (DidPress())
+    #region Swipe Navigation
+    private void HandleSwipeInput()
+    {
+        if (Input.GetMouseButton(0))
+        {
+            ProcessSwipe(Input.mousePosition);
+        }
+        else if (Input.touchCount > 0)
+        {
+            Touch t = Input.GetTouch(0);
+            if (t.phase == TouchPhase.Began)
             {
-                DropHeldPiece();
-                Invoke(nameof(SpawnHeldPiece), 0.15f);
+                lastTouchPos = t.position;
+                isTouching = true;
+            }
+            else if (t.phase == TouchPhase.Moved && isTouching)
+            {
+                ProcessSwipe(t.position);
+            }
+            else if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled)
+            {
+                isTouching = false;
             }
         }
     }
 
-    private float GetPointerWorldX()
+    private void ProcessSwipe(Vector2 currentPos)
     {
-        // Get current pointer position (mouse or first touch)
-        Vector3 p = Input.mousePosition;
-        if (Input.touchCount > 0)
+        Vector2 delta = currentPos - lastTouchPos;
+        if (Mathf.Abs(delta.x) > swipeThreshold)
         {
-            p = Input.GetTouch(0).position;
-        }
+            if (delta.x < 0)
+                currentSpawnIndex = (currentSpawnIndex - 1 + spawnPoints.Count) % spawnPoints.Count;
+            else
+                currentSpawnIndex = (currentSpawnIndex + 1) % spawnPoints.Count;
 
-        // Protect against Simulator/Editor cases yielding NaN or unset z
-        if (float.IsNaN(p.x) || float.IsInfinity(p.x))
+            lastTouchPos = currentPos;
+        }
+        else
         {
-            return lastPointerX == 0f ? (minX + maxX) * 0.5f : lastPointerX;
+            lastTouchPos = currentPos;
         }
+    }
+    #endregion
 
-        // For orthographic camera, z is still required by API; supply distance to the spawning plane
-        float planeZ = Mathf.Abs(cam.transform.position.z - transform.position.z);
-        p.z = planeZ <= 0f ? Mathf.Abs(cam.transform.position.z) : planeZ;
+    private void MoveHeldPieceToCurrentPoint()
+    {
+        if (heldPiece == null || spawnPoints[currentSpawnIndex] == null) return;
 
-        Vector3 world = cam.ScreenToWorldPoint(p);
-        if (float.IsNaN(world.x) || float.IsInfinity(world.x))
-        {
-            return lastPointerX == 0f ? (minX + maxX) * 0.5f : lastPointerX;
-        }
-
-        lastPointerX = world.x;
-        return world.x;
+        Vector3 target = spawnPoints[currentSpawnIndex].position;
+        heldPiece.transform.position = Vector3.Lerp(
+            heldPiece.transform.position,
+            target,
+            Time.deltaTime * pieceMoveSpeed
+        );
     }
 
-    private bool DidPress()
+    // Called by UI Drop Button
+    private void TryDropPiece()
     {
-        bool mouse = Input.GetMouseButtonDown(0);
-        bool touch = false;
-        if (Input.touchCount > 0)
-        {
-            var t = Input.GetTouch(0);
-            touch = t.phase == TouchPhase.Began;
-        }
-        return mouse || touch;
+        if (heldPiece == null || isSpawning) return;
+
+        heldPiece.SetHeld(false);
+        heldPiece = null;
+
+        // Start 1-second delay with coroutine
+        StartCoroutine(SpawnNextPieceAfterDelay());
+    }
+
+    // 1-second delay using Coroutine
+    private IEnumerator SpawnNextPieceAfterDelay()
+    {
+        isSpawning = true;
+        yield return new WaitForSeconds(spawnDelay);
+        SpawnHeldPiece();
+        isSpawning = false;
     }
 
     private void SpawnHeldPiece()
     {
-        if (numberPiecePrefab == null) return;
+        if (numberPiecePrefab == null || spawnPoints.Count == 0) return;
 
-        heldPiece = Instantiate(numberPiecePrefab, new Vector3(transform.position.x, topY, 0f), Quaternion.identity);
+        Transform spawnPoint = spawnPoints[currentSpawnIndex];
+        heldPiece = Instantiate(numberPiecePrefab, spawnPoint.position, Quaternion.identity);
         heldPiece.SetHeld(true);
-        int v = nextValue;
-        heldPiece.InitializeValue(v);
+        heldPiece.InitializeValue(nextValue);
+
+        // Prepare next preview
         nextValue = GetRandomStartValue();
         UpdatePreview(nextValue);
         GameManager.I?.SetNextValue(nextValue);
     }
 
-    private void DropHeldPiece()
-    {
-        if (heldPiece == null) return;
-        heldPiece.SetHeld(false);
-        heldPiece = null;
-    }
-
     private void UpdatePreview(int value)
     {
         if (previewSprite != null)
-        {
             previewSprite.color = ValueColors.GetColor(value);
-        }
         if (previewLabel != null)
-        {
             previewLabel.text = value.ToString();
-        }
     }
 
-    // Tune starting values distribution here
     private int GetRandomStartValue()
     {
-        // Weights: 2 (60%), 4 (25%), 8 (10%), 16 (5%)
         int r = Random.Range(0, 100);
         if (r < 60) return 2;
         if (r < 85) return 4;
         if (r < 95) return 8;
         return 16;
+    }
+
+    // Visual debug in Scene view
+    private void OnDrawGizmosSelected()
+    {
+        if (spawnPoints.Count == 0) return;
+
+        for (int i = 0; i < spawnPoints.Count; i++)
+        {
+            if (spawnPoints[i] == null) continue;
+            Gizmos.color = (i == currentSpawnIndex) ? Color.green : Color.yellow;
+            Gizmos.DrawWireSphere(spawnPoints[i].position, 0.3f);
+        }
     }
 }
