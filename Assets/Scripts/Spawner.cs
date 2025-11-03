@@ -24,6 +24,7 @@ public class Spawner : MonoBehaviour
     [SerializeField] private SpriteRenderer previewSprite;
     [SerializeField] private TMP_Text previewLabel;
 
+
     private Camera cam;
     private NumberPiece heldPiece;
     private int currentSpawnIndex = 0;
@@ -73,11 +74,7 @@ public class Spawner : MonoBehaviour
     #region Swipe Navigation
     private void HandleSwipeInput()
     {
-        if (Input.GetMouseButton(0))
-        {
-            ProcessSwipe(Input.mousePosition);
-        }
-        else if (Input.touchCount > 0)
+         if (Input.touchCount > 0)
         {
             Touch t = Input.GetTouch(0);
             if (t.phase == TouchPhase.Began)
@@ -87,25 +84,30 @@ public class Spawner : MonoBehaviour
             }
             else if (t.phase == TouchPhase.Moved && isTouching)
             {
-                ProcessSwipe(t.position);
+                //StartCoroutine(ProcessSwipe(t.position));
+                
             }
             else if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled)
             {
+                ProcessSwipe(t.position);
                 isTouching = false;
             }
         }
     }
 
+   
     private void ProcessSwipe(Vector2 currentPos)
     {
         Vector2 delta = currentPos - lastTouchPos;
         if (Mathf.Abs(delta.x) > swipeThreshold)
         {
             if (delta.x < 0)
-                currentSpawnIndex = (currentSpawnIndex - 1 + spawnPoints.Count) % spawnPoints.Count;
+                currentSpawnIndex = Mathf.Clamp(currentSpawnIndex-1,0,spawnPoints.Count-1);
+                //currentSpawnIndex = (currentSpawnIndex - 1 + spawnPoints.Count) % spawnPoints.Count;
             else
-                currentSpawnIndex = (currentSpawnIndex + 1) % spawnPoints.Count;
-
+                currentSpawnIndex = Mathf.Clamp(currentSpawnIndex+1,0,spawnPoints.Count-1);
+                //currentSpawnIndex = (currentSpawnIndex + 1) % spawnPoints.Count;
+            Debug.Log("Swip to " +currentSpawnIndex);
             lastTouchPos = currentPos;
         }
         else
@@ -119,6 +121,7 @@ public class Spawner : MonoBehaviour
     {
         if (heldPiece == null || spawnPoints[currentSpawnIndex] == null) return;
 
+        
         Vector3 target = spawnPoints[currentSpawnIndex].position;
         heldPiece.transform.position = Vector3.Lerp(
             heldPiece.transform.position,
@@ -153,6 +156,7 @@ public class Spawner : MonoBehaviour
         if (numberPiecePrefab == null || spawnPoints.Count == 0) return;
 
         Transform spawnPoint = spawnPoints[currentSpawnIndex];
+        Debug.Log("SpawnPiece index "+currentSpawnIndex);
         heldPiece = Instantiate(numberPiecePrefab, spawnPoint.position, Quaternion.identity);
         heldPiece.SetHeld(true);
         heldPiece.InitializeValue(nextValue);
