@@ -12,16 +12,18 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private GameObject gameWonPanel;
 
-    [SerializeField] private int reqScore = 50;
     [Header("Timer Settings")]
     public float timeLimit = 60f; // Time limit in seconds
     private float currentTime;
     public TextMeshProUGUI timerText;
 
+    [Header("Bucket Trigger")]
+    [SerializeField] private BucketTrigger[] bucketTrigger;
     private int score;
     private int highScore;
     private bool isGameOver;
     private bool isWon;
+    private bool buketComplete;
 
     private void Awake()
     {
@@ -54,10 +56,23 @@ public class GameManager : MonoBehaviour
             {
                 GameOver();
             }
-            if(score>=reqScore)
+            foreach(var bucket in bucketTrigger)
+            {
+                if(bucket.IsComplete()==false)
+                {
+                    buketComplete = false;
+                    break;
+                }
+                else
+                {
+                    buketComplete = true;
+                }
+            }
+            if(buketComplete)
             {
                 GameWon();
             }
+
         }
     }
     
