@@ -23,7 +23,7 @@ public class NumberPiece : MonoBehaviour
     private Rigidbody2D rb;
     private Collider2D col;
 
-    private int value;
+    public int value { get; private set; }
     private bool held;
     private bool isMerging;
     private float spawnTime;

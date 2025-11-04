@@ -107,7 +107,7 @@ public class Spawner : MonoBehaviour
             else
                 currentSpawnIndex = Mathf.Clamp(currentSpawnIndex+1,0,spawnPoints.Count-1);
                 //currentSpawnIndex = (currentSpawnIndex + 1) % spawnPoints.Count;
-            Debug.Log("Swip to " +currentSpawnIndex);
+           
             lastTouchPos = currentPos;
         }
         else
@@ -156,7 +156,7 @@ public class Spawner : MonoBehaviour
         if (numberPiecePrefab == null || spawnPoints.Count == 0) return;
 
         Transform spawnPoint = spawnPoints[currentSpawnIndex];
-        Debug.Log("SpawnPiece index "+currentSpawnIndex);
+        
         heldPiece = Instantiate(numberPiecePrefab, spawnPoint.position, Quaternion.identity);
         heldPiece.SetHeld(true);
         heldPiece.InitializeValue(nextValue);
