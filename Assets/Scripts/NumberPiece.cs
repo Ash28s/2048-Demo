@@ -28,6 +28,7 @@ public class NumberPiece : MonoBehaviour
     public int value { get; private set; }
     public BallColor ballColor { get; private set; }
     
+    public bool isDroped;
     private bool held;
     private bool isMerging;
     private float spawnTime;
