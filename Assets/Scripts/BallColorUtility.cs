@@ -24,7 +24,7 @@ public static class BallColorUtility
             case BallColor.White:
                 return new Color(1f, 1f, 1f); // Pure White
             case BallColor.Yellow:
-                return new Color(1f, 0.92f, 0.016f); // Yellow
+                return new Color(1f, 1f, 0.0f); // Yellow
             case BallColor.Blue:
                 return new Color(0f, 0.5f, 1f); // Blue
             case BallColor.Green:

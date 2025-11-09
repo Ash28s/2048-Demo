@@ -139,6 +139,7 @@ public class Spawner : MonoBehaviour
         if (heldPiece == null || isSpawning) return;
 
         heldPiece.SetHeld(false);
+        heldPiece.isDroped = true;
         heldPiece = null;
 
         // Start 1-second delay with coroutine

@@ -12,11 +12,6 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private GameObject gameWonPanel;
 
-    [Header("Timer Settings")]
-    public float timeLimit = 60f; // Time limit in seconds
-    private float currentTime;
-    public TextMeshProUGUI timerText;
-
     [Header("Bucket Trigger")]
     [SerializeField] private BucketTrigger[] bucketTrigger;
     private int score;
@@ -34,7 +29,6 @@ public class GameManager : MonoBehaviour
         }
         I = this;
         DontDestroyOnLoad(gameObject);
-        currentTime = timeLimit;
     }
 
     private void Start()
@@ -47,15 +41,9 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        if (!isGameOver && currentTime > 0 && isWon == false)
+        if (!isGameOver && isWon == false)
         {
-            currentTime -= Time.deltaTime;
-            UpdateTimerDisplay();
-
-            if (currentTime <= 0)
-            {
-                GameOver();
-            }
+            
             foreach(var bucket in bucketTrigger)
             {
                 if(bucket.IsComplete()==false)
@@ -76,16 +64,6 @@ public class GameManager : MonoBehaviour
         }
     }
     
-    private void UpdateTimerDisplay()
-    {
-        if (timerText != null)
-        {
-            int minutes = Mathf.FloorToInt(currentTime / 60);
-            int seconds = Mathf.FloorToInt(currentTime % 60);
-            timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
-        }
-    }
-
 
     public void AddScore(int value)
     {
