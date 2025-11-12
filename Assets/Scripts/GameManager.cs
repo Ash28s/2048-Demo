@@ -1,19 +1,14 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager I;
 
-    [Header("UI")]
-    [SerializeField] private TMP_Text scoreText;
-    [SerializeField] private TMP_Text highScoreText;
-    [SerializeField] private TMP_Text nextText;
-    [SerializeField] private GameObject gameOverPanel;
-    [SerializeField] private GameObject gameWonPanel;
+    private BucketTrigger[] bucketTrigger;
 
-    [Header("Bucket Trigger")]
-    [SerializeField] private BucketTrigger[] bucketTrigger;
+    private UIManager uiManager;
     private int score;
     private int highScore;
     private bool isGameOver;
@@ -33,10 +28,33 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        highScore = PlayerPrefs.GetInt("HIGH_SCORE", 0);
-        UpdateScoreUI();
-        UpdateHighScoreUI();
-        if (gameOverPanel != null) gameOverPanel.SetActive(false);
+        if(uiManager==null) uiManager = FindObjectOfType<UIManager>();
+        bucketTrigger = FindObjectsOfType<BucketTrigger>();
+        isGameOver=false;
+        isWon=false;
+    }
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        RefreshReferences();
+    }
+
+    void RefreshReferences()
+    {
+        if(uiManager==null) uiManager = FindObjectOfType<UIManager>();
+        bucketTrigger = FindObjectsOfType<BucketTrigger>();
+        isGameOver=false;
+        isWon=false;
     }
 
     private void Update()
@@ -74,36 +92,28 @@ public class GameManager : MonoBehaviour
             highScore = score;
             PlayerPrefs.SetInt("HIGH_SCORE", highScore);
         }
-        UpdateScoreUI();
-        UpdateHighScoreUI();
+        uiManager.UpdateScoreUI(score);
+        uiManager.UpdateHighScoreUI(highScore);
     }
 
     public void ResetScore()
     {
         score = 0;
-        UpdateScoreUI();
+        uiManager.UpdateScoreUI(score);
     }
 
-    private void UpdateScoreUI()
-    {
-        if (scoreText != null) scoreText.text = $"Score: {score}";
-    }
 
-    private void UpdateHighScoreUI()
-    {
-        if (highScoreText != null) highScoreText.text = $"Best: {highScore}";
-    }
 
     public void SetNextValue(int v)
     {
-        if (nextText != null) nextText.text = $"Next: {v}";
+        uiManager.SetNextValue(v);
     }
 
     public void GameOver()
     {
         if (isGameOver) return;
         isGameOver = true;
-        if (gameOverPanel != null) gameOverPanel.SetActive(true);
+        uiManager.GameOver();
         // Optionally stop time:
         // Time.timeScale = 0f;
     }
@@ -112,7 +122,9 @@ public class GameManager : MonoBehaviour
     {
         if (isWon) return;
         isWon = true;
-        if (gameWonPanel != null) gameWonPanel.SetActive(true);
+        uiManager.GameWon();
+        int level = PlayerPrefs.GetInt("Level",1)+1;
+        PlayerPrefs.SetInt("Level",level);
         // Optionally stop time:
         // Time.timeScale = 0f;
     }

@@ -7,6 +7,7 @@ public class PauseMenu : MonoBehaviour
     public GameObject pausePanel;
     void Awake()
     {
+        Time.timeScale =1f;
     }
 
     void Update()
@@ -65,6 +66,7 @@ public class PauseMenu : MonoBehaviour
 
     public void Retry()
     {
+        Time.timeScale =1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 

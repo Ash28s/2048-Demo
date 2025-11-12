@@ -12,9 +12,11 @@ public class BucketTrigger : MonoBehaviour
     [SerializeField] private SpriteRenderer checkMark;
     [SerializeField] private SpriteRenderer bgSprite;
     [SerializeField] private TMP_Text requiredValueTxt;
+    int level = 1;
 
     void Start()
     {
+        level = PlayerPrefs.GetInt("Level",1);
         SelectRandomValue();
         requiredColor = BallColorUtility.GetRandomColor();
         Color reqColor = BallColorUtility.GetUnityColor(requiredColor);
@@ -40,17 +42,25 @@ public class BucketTrigger : MonoBehaviour
 
     void SelectRandomValue()
     {
+        if(level<7)
+        {
         int rand = Random.Range(0,4);
         switch(rand)
         {
-            case 0:requiredValue = 256;
+            case 0:requiredValue = 16;
                     break;
-            case 1:requiredValue = 1024;
+            case 1:requiredValue = 32;
                     break;
-            case 2:requiredValue = 128;
+            case 2:requiredValue = 64;
                     break;
-            case 3:requiredValue = 512;
+            case 3:requiredValue = 128;
                     break;                        
+        }
+        }
+        else
+        {
+            requiredValue = (int)(Mathf.Pow(2,Random.Range(level-3,level)));
+            requiredValue = Mathf.Clamp(requiredValue,2,2048);
         }
     }
 }
