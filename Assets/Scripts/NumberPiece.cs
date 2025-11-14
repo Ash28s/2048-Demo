@@ -117,6 +117,8 @@ public class NumberPiece : MonoBehaviour
         if (!canMerge)
         {
             // Different colors AND different values - do nothing, let physics handle it
+            float randForce = Random.Range(-1f,1f);
+            rb.AddForce(new Vector2(randForce,0f));
             return;
         }
 
