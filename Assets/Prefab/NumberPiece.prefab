@@ -171,6 +171,7 @@ MonoBehaviour:
   baseScale: 0.2
   scalePerPower: 0
   maxScale: 0.2
+  mergeEffect: {fileID: 4021103657954561961, guid: 5c755f9bc5253ea418e919994537dcc7, type: 3}
   isDroped: 0
 --- !u!1 &6933812368174825396
 GameObject:
