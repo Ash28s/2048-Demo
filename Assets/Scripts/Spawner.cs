@@ -113,9 +113,14 @@ public class Spawner : MonoBehaviour
            
             lastTouchPos = currentPos;
         }
+        else if(currentPos.y<Screen.height*1/4)
+        {
+            TryDropPiece();
+        }
         else
         {
             lastTouchPos = currentPos;
+       
         }
     }
     #endregion

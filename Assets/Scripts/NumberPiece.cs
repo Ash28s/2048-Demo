@@ -22,6 +22,7 @@ public class NumberPiece : MonoBehaviour
     [SerializeField] private float scalePerPower = 0.06f;
     [SerializeField] private float maxScale = 1.6f;
 
+    public GameObject mergeEffect;
     private Rigidbody2D rb;
     private Collider2D col;
 
@@ -216,6 +217,8 @@ public class NumberPiece : MonoBehaviour
         // Restore scale after pop
         transform.localScale = originalScale;
 
+        GameObject effect = Instantiate(mergeEffect,transform.position,transform.rotation);
+        Destroy(effect,0.5f);
         // Destroy other piece
         Destroy(other.gameObject);
 
