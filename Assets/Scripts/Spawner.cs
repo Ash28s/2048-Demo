@@ -36,6 +36,8 @@ public class Spawner : MonoBehaviour
     private Vector2 lastTouchPos;
     private bool isTouching = false;
     private bool isSpawning = false; // Prevent overlap
+    
+    public bool isPowerUpUse = false;
 
     private void Start()
     {
@@ -115,7 +117,8 @@ public class Spawner : MonoBehaviour
         }
         else if(currentPos.y<Screen.height*1/4)
         {
-            TryDropPiece();
+            if(isPowerUpUse==false)
+                TryDropPiece();
         }
         else
         {

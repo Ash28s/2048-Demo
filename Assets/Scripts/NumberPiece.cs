@@ -65,6 +65,12 @@ public class NumberPiece : MonoBehaviour
         UpdateVisuals();
     }
 
+    public void ChangeColor()
+    {
+        ballColor = BallColorUtility.GetRandomColor();
+        UpdateVisuals();
+    }
+
     public void SetHeld(bool h)
     {
         held = h;
