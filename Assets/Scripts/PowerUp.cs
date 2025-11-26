@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class PowerUp : MonoBehaviour
 {
@@ -14,9 +15,23 @@ public class PowerUp : MonoBehaviour
     [SerializeField] private GameObject deleteEffect;
     [SerializeField] private GameObject blastEffect;
     [SerializeField] private GameObject chanageEffect;
+    
+    [SerializeField] private TMP_Text deleteAmountText;
+    [SerializeField] private TMP_Text blastAmountText;
+    [SerializeField] private TMP_Text changeColorAmountText;
+
+    [SerializeField] private Image deleteImg;
+    [SerializeField] private Image blastImg;
+    [SerializeField] private Image chanageImg;
+
+    public Color unSelected;
+    public Color selected;
     private bool isDelete = false;
     private bool isBlast = false;
     private bool isChangeColor = false;
+    private int deleteAmount;
+    private int blastAmount;
+    private int changeColorAmount;
     // Start is called before the first frame update
     void Start()
     {
@@ -28,6 +43,21 @@ public class PowerUp : MonoBehaviour
             changeColorButton.onClick.AddListener(ChangeColor);       
         if(spawner==null)
             spawner = FindObjectOfType<Spawner>();    
+
+        if(deleteImg!=null)
+            deleteImg.color = unSelected;
+        if(blastImg!=null)
+            blastImg.color = unSelected;
+        if(chanageImg!=null)
+            chanageImg.color = unSelected;    
+
+        int level = PlayerPrefs.GetInt("Level",1);
+        deleteAmount = Mathf.Max(1,(level-1)*(int)(Random.Range(0.1f,2f)));
+        blastAmount=Mathf.Max(1,(level-1)*(int)(Random.Range(0.1f,2f)));
+        changeColorAmount = Mathf.Max(1,(level-1)*(int)(Random.Range(0.05f,1.1f)));
+        deleteAmountText.text = "x"+deleteAmount.ToString("0");
+        blastAmountText.text = "x"+blastAmount.ToString("0");
+        changeColorAmountText.text = "x"+changeColorAmount.ToString("0");
 
     }
 
@@ -52,7 +82,8 @@ public class PowerUp : MonoBehaviour
                         Destroy(effect,0.5f);
                         Destroy(hit.collider.gameObject);
                         isDelete = false;
-                        
+                        deleteAmount--;
+                        deleteImg.color = unSelected;
                     }   
                     else if(isBlast)
                     {
@@ -65,6 +96,8 @@ public class PowerUp : MonoBehaviour
                                 Destroy(col.gameObject);}
                         }      
                         isBlast = false;
+                        blastAmount--;
+                        blastImg.color = unSelected;
                     }
                     else if(isChangeColor)
                     {
@@ -72,8 +105,13 @@ public class PowerUp : MonoBehaviour
                         Destroy(effect,0.5f);
                         hit.collider.gameObject.GetComponent<NumberPiece>().ChangeColor();
                         isChangeColor = false;
+                        changeColorAmount--;
+                        chanageImg.color = unSelected;
                     }
                     spawner.isPowerUpUse = false;
+                    deleteAmountText.text = "x"+deleteAmount.ToString("0");
+                    blastAmountText.text = "x"+blastAmount.ToString("0");
+                    changeColorAmountText.text = "x"+changeColorAmount.ToString("0");
                     
                 }
                 else
@@ -89,27 +127,30 @@ public class PowerUp : MonoBehaviour
 
     private void DeleteBall()
     {
-        if(isBlast==false&&isChangeColor==false)
+        if(isBlast==false&&isChangeColor==false&&deleteAmount>0)
         {
             isDelete = true;
             spawner.isPowerUpUse = true;
+            deleteImg.color = selected;
         }
     }
 
     private void BlastDeleteBalls()
     {
-        if(isDelete==false&&isChangeColor==false){
+        if(isDelete==false&&isChangeColor==false&&blastAmount>0){
             isBlast = true;
             spawner.isPowerUpUse = true;
+            blastImg.color = selected;
         }
     }
 
     private void ChangeColor()
     {
-        if(isDelete==false&&isBlast==false)
+        if(isDelete==false&&isBlast==false&&changeColorAmount>0)
         {
             isChangeColor=true;
             spawner.isPowerUpUse = true;
+            chanageImg.color = selected;
         }
 
     }
