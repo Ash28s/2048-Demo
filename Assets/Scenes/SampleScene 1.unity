@@ -3106,8 +3106,8 @@ MonoBehaviour:
   deleteImg: {fileID: 436521523}
   blastImg: {fileID: 3521895}
   chanageImg: {fileID: 1411295558}
-  unSelected: {r: 0, g: 0, b: 0, a: 0}
-  selected: {r: 0, g: 0, b: 0, a: 0}
+  unSelected: {r: 0.5138213, g: 0.5138213, b: 0.5138213, a: 1}
+  selected: {r: 1, g: 1, b: 1, a: 1}
 --- !u!4 &713190856
 Transform:
   m_ObjectHideFlags: 0
