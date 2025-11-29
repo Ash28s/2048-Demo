@@ -24,6 +24,11 @@ public class PowerUp : MonoBehaviour
     [SerializeField] private Image blastImg;
     [SerializeField] private Image chanageImg;
 
+    [SerializeField] private AudioSource audio;
+    [SerializeField] private AudioClip deleteSound;
+    [SerializeField] private AudioClip blastSound;
+    [SerializeField] private AudioClip changeSound;
+
     public Color unSelected;
     public Color selected;
     private bool isDelete = false;
@@ -84,6 +89,8 @@ public class PowerUp : MonoBehaviour
                         isDelete = false;
                         deleteAmount--;
                         deleteImg.color = unSelected;
+                        audio.clip = deleteSound;
+                        audio.Play();
                     }   
                     else if(isBlast)
                     {
@@ -98,6 +105,8 @@ public class PowerUp : MonoBehaviour
                         isBlast = false;
                         blastAmount--;
                         blastImg.color = unSelected;
+                        audio.clip = blastSound;
+                        audio.Play();
                     }
                     else if(isChangeColor)
                     {
@@ -107,6 +116,8 @@ public class PowerUp : MonoBehaviour
                         isChangeColor = false;
                         changeColorAmount--;
                         chanageImg.color = unSelected;
+                        audio.clip = changeSound;
+                        audio.Play();
                     }
                     spawner.isPowerUpUse = false;
                     deleteAmountText.text = "x"+deleteAmount.ToString("0");
