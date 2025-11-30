@@ -20,7 +20,7 @@ public class BucketTrigger : MonoBehaviour
         SelectRandomValue();
         requiredColor = BallColorUtility.GetRandomColor();
         Color reqColor = BallColorUtility.GetUnityColor(requiredColor);
-        bgSprite.color = new Color(reqColor.r,reqColor.g,reqColor.b,0.5f);
+        bgSprite.color = new Color(reqColor.r,reqColor.g,reqColor.b,0.2f);
         requiredValueTxt.text = requiredValue.ToString("0");
     }
 
